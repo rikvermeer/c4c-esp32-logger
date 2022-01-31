@@ -1,0 +1,3 @@
+#!/bin/bash
+export IDF_PATH=~/workspace/esp-idf
+source ~/workspace/esp-idf/export.sh

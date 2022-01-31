@@ -1,0 +1,9 @@
+[submodule "webrepl"]
+	path = tools/webrepl
+	url = https://github.com/micropython/webrepl.git
+[submodule "lib/micropython-mqtt"]
+	path = lib/micropython-mqtt
+	url = https://github.com/peterhinch/micropython-mqtt.git
+[submodule "lib/micropython-async"]
+	path = lib/micropython-async
+	url = https://github.com/peterhinch/micropython-async.git

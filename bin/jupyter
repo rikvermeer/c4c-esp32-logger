@@ -1,0 +1,3 @@
+#!/bin/bash
+source ~/.espressif/python_env/idf4.4_py3.9_env/bin/activate
+jupyter notebook

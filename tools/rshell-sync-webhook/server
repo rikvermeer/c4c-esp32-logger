@@ -1,0 +1,11 @@
+#!/bin/bash
+COMMAND="/Users/rikvermeer/.espressif/python_env/idf4.4_py3.9_env/bin/rshell"
+INTERFACE="192.168.1.72"
+PORT=1926
+BROADCAST_GROUP="224.1.0.1"
+
+echo "Running ${COMMAND} for broadcast group ${BROADCAST_GROUP} on port ${PORT} on interface ${INTERFACE}"
+
+#socat UDP4-RECVFROM:${PORT},ip-add-membership=${BROADCAST_GROUP}:${INTERFACE},fork EXEC:${COMMAND}
+socat -dd UDP4-RECVFROM:${PORT},ip-add-membership=${BROADCAST_GROUP}:${INTERFACE},fork system:ls
+#socat UDP4-RECVFROM:${PORT},ip-add-membership=${BROADCAST_GROUP}:${INTERFACE},fork system:${COMMAND}

@@ -1,0 +1,2 @@
+#!/bin/bash
+ampy -p /dev/cu.usbserial-0001 ls

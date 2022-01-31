@@ -1,0 +1,2 @@
+#!/bin/bash
+screen /dev/cu.usbserial-0001 115200

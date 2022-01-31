@@ -1,0 +1,8 @@
+{
+    "wifiPSK": "melkweggast", 
+    "host": "c4c.lvl-up.dev", 
+    "tls": true, 
+    "tls_params": {
+    }, 
+    "wifiSSID": "Stichting De Melkweg"
+}

@@ -1,0 +1,622 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Coffeecloud REST API
+  license:
+    name: UNLICENSED - PROTECTION AGAINST UNAUTHORIZED REPRESENTATION UNDER DUTCH LAW
+# servers:
+#   - url: http://wearedoop.com
+paths:
+  /machine-tokens:
+    post:
+      summary: Home call to let the server know that the device exists and wants to connect. Requires the secret key.
+      operationId: homeCall
+      tags:
+        - machine
+      parameters:
+        - in: header
+          name: X-API-Key
+          schema:
+            type: string
+          required: true
+          description: The secret key required to do a valid home call.
+      responses:
+        201:
+          description: Home call went successfully.
+          content:
+            application/json:
+              schema:
+                properties:
+                  token:
+                    example: ey...
+        default:
+          description: unauthorized / unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /machines:
+    post:
+      summary: Registers a machine, requires a token by doing the home call first.
+      operationId: registerMachine
+      tags:
+        - machine
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - serial
+                - brand
+                - type
+              properties:
+                serial:
+                  type: string
+                  example: 0000-0000-0000
+                brand:
+                  type: string
+                  example: ETNA
+                type:
+                  type: string
+                  example: Super machine 2.0
+                comments:
+                  type: string
+                  example: Floor 1, Wing A, Room 4
+      security:
+        - machineKey: []
+      responses:
+        201:
+          description: Machine successfully registered.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Machine"
+        default:
+          description: unauthorized / unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /machines/paginated/{page}:
+    get:
+      summary: Get all machines paginated of which the user has access to.
+      operationId: getPaginatedMachines
+      tags:
+        - portal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: path
+          required: true
+          description: The page number.
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of machines successfully fetched.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  amount_of_pages:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Machine"
+        default:
+          description: unauthorized / unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /machines/inactive/paginated/{page}:
+    get:
+      summary: Get inactive machines paginated. Only for admins.
+      operationId: getPaginatedInactiveMachines
+      tags:
+        - portal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: path
+          required: true
+          description: The page number.
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of machines successfully fetched.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  amount_of_pages:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Machine"
+        default:
+          description: unauthorized / unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /machines/activate/{machineId}:
+    put:
+      summary: Sets organisation and location to machine which activates it for use.
+      operationId: activateMachine
+      tags:
+        - portal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: machineId
+          in: path
+          required: true
+          description: The ID of the machine to activate.
+          schema:
+            type: integer
+      requestBody:
+        description: The organisation and location IDs for which the machine needs to be set.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivateMachine"
+      responses:
+        200:
+          description: Machine which is successfully activated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Machine"
+        default:
+          description: unauthorized / unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /machines/deactivate/{machineId}:
+    put:
+      summary: Remove organisation and location from machine which deactivates it.
+      operationId: deactivateMachine
+      tags:
+        - portal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: machineId
+          in: path
+          required: true
+          description: The ID of the machine to deactivate.
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Machine which is successfully deactivated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Machine"
+        default:
+          description: unauthorized / unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /organisations/paginated/{page}:
+    get:
+      summary: Get all organisations paginated of which the user has access to.
+      operationId: getPaginatedOrganisations
+      tags:
+        - portal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: path
+          required: true
+          description: The page number.
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of organisations successfully fetched.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  amount_of_pages:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Organisation"
+        default:
+          description: unauthorized / unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /organisations/search/{query}/{page}:
+    get:
+      summary: Get all organisations paginated of which the user has access to.
+      operationId: searchOrganisations
+      tags:
+        - portal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: query
+          in: path
+          required: true
+          description: The search query. Searches organisations containing this value while ignoring the case.
+          schema:
+            type: string
+        - name: page
+          in: path
+          required: true
+          description: The page number.
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of organisations successfully fetched.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  amount_of_pages:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Organisation"
+        default:
+          description: unauthorized / unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /organisations/details/{id}:
+    get:
+      summary: Get organisation details.
+      operationId: getOrganisationDetails
+      tags:
+        - portal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the organisation to get details from.
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Organisation successfully fetched.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organisation"
+        default:
+          description: unauthorized / unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /organisations/details/{organisationId}/location/{locationId}:
+    get:
+      summary: Get location details.
+      operationId: getLocationDetails
+      tags:
+        - portal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisationId
+          in: path
+          required: true
+          description: The id of the organisation linked to the location to get details from.
+          schema:
+            type: integer
+        - name: locationId
+          in: path
+          required: true
+          description: The id of the location to get details from.
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Location successfully fetched.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+        default:
+          description: unauthorized / unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /organisations/details/{organisationId}/location/{locationId}/machine/{machineId}:
+    get:
+      summary: Get machine details.
+      operationId: getMachineDetails
+      tags:
+        - portal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisationId
+          in: path
+          required: true
+          description: The id of the organisation linked to the location.
+          schema:
+            type: integer
+        - name: locationId
+          in: path
+          required: true
+          description: The id of the location linked to the machine to get details from.
+          schema:
+            type: integer
+        - name: machineId
+          in: path
+          required: true
+          description: The id of the machine to get details from.
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Machine successfully fetched.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Machine"
+        default:
+          description: unauthorized / unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /organisations/details/{organisationId}/machines/paginated/{page}:
+    get:
+      summary: Get all machines paginated by organisation.
+      operationId: getPaginatedLocationMachines
+      tags:
+        - portal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisationId
+          in: path
+          required: true
+          description: ID of the organisation to get machines from.
+          schema:
+            type: integer
+        - name: page
+          in: path
+          required: true
+          description: The page number.
+          schema:
+            type: integer
+        - name: status
+          in: query
+          description: "Filter machines on error. For healthy machines: 'ok', for unhealthy: 'error'."
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of machines successfully fetched.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  amount_of_pages:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Machine"
+        default:
+          description: unauthorized / unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /organisations/details/{organisationId}/machines/search/{query}/{page}:
+    get:
+      summary: Search machines by organisation.
+      operationId: searchPaginatedLocationMachines
+      tags:
+        - portal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisationId
+          in: path
+          required: true
+          description: ID of the organisation to get machines from.
+          schema:
+            type: integer
+        - name: query
+          in: path
+          required: true
+          description: The search query to search machines by in name, comments and serial.
+          schema:
+            type: string
+        - name: page
+          in: path
+          required: true
+          description: The page number.
+          schema:
+            type: integer
+        - name: status
+          in: query
+          description: "Filter machines on error. For healthy machines: 'ok', for unhealthy: 'error'."
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of machines successfully fetched.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  amount_of_pages:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Machine"
+        default:
+          description: unauthorized / unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+tags:
+  - name: machine
+    description: Communication between Coffeecloud backend and coffee machines are done with these calls.
+  - name: portal
+    description: API calls done by the Coffeecloud Portal (frontend).
+
+components:
+  securitySchemes:
+    machineKey:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: "Example: Machine ey..."
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    ActivateMachine:
+      properties:
+        organisation_id:
+          type: integer
+        location_id:
+          type: integer
+    Cliq:
+      properties:
+        id:
+          type: integer
+        option:
+          $ref: "#/components/schemas/Option"
+        price:
+          type: number
+    Error:
+      description: unauthorized / not found / unexpected error
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    Location:
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        street_name:
+          type: string
+        house_number:
+          type: string
+        postal_code:
+          type: string
+        city:
+          type: string
+        province:
+          type: string
+        country:
+          type: string
+        machines:
+          type: array
+          items:
+            $ref: "#/components/schemas/Machine"
+        amount_of_machines:
+          type: integer
+        total_cliqs:
+          type: integer
+    Machine:
+      required:
+        - serial
+        - comments
+        - id
+      properties:
+        serial:
+          type: string
+        comments:
+          type: string
+        id:
+          type: integer
+        name:
+          type: string
+        error:
+          type: string
+        brand:
+          type: string
+        type:
+          type: string
+        order:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+        total_cliqs:
+          type: integer
+    Option:
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    Order:
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+        cliqs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Cliq"
+    Organisation:
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        locations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Location"
+        amount_of_machines:
+          type: integer
+        total_cliqs:
+          type: integer
