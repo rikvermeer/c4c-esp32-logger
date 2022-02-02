@@ -119,22 +119,35 @@ class OTAUpdater:
         return '0.0'
 
     def get_latest_version(self):
-        latest_release = self.http_client.get('https://api.github.com/repos/{}/releases/latest'.format(self.github_repo))
+        rel_url = 'https://api.github.com/repos/{}/releases/latest'.format(self.github_repo)
+        print('Downloading release info from: ',rel_url)
+        latest_release = self.http_client.get(rel_url)
+        #print(latest_release.json())
         version = latest_release.json()['tag_name']
         latest_release.close()
         return version
 
     def _download_new_version(self, version):
         print('Downloading version {}'.format(version))
+        if not self._exists_dir(self.modulepath(self.new_version_dir)):
+            self._mk_dirs(self.modulepath(self.new_version_dir))
         self._download_all_files(version)
         print('Version {} downloaded to {}'.format(version, self.modulepath(self.new_version_dir)))
 
     def _download_all_files(self, version, sub_dir=''):
-        url = 'https://api.github.com/repos/{}/contents{}{}{}?ref=refs/tags/{}'.format(self.github_repo, self.github_src_dir, self.main_dir, sub_dir, version)
-        gc.collect() 
+        #url = 'https://api.github.com/repos/{}/contents{}{}{}?ref=refs/tags/{}'.format(self.github_repo, self.github_src_dir, self.main_dir, sub_dir, version)
+        github_src_dir = self.github_src_dir.rstrip('/')
+        url = 'https://api.github.com/repos/{}/contents{}{}?ref=refs/tags/{}'.format(self.github_repo, github_src_dir, sub_dir, version)
+        gc.collect()
+        print(url)
         file_list = self.http_client.get(url)
         for file in file_list.json():
-            path = self.modulepath(self.new_version_dir + '/' + file['path'].replace(self.main_dir + '/', '').replace(self.github_src_dir, ''))
+            print(file)
+            path = self.modulepath('/' + self.new_version_dir + '/' + file['path'].replace('app/', ''))
+            subdir = '/'.join(path.split('/')[:-1])
+            if not self._exists_dir(subdir):
+                self._mk_dirs(subdir)
+
             if file['type'] == 'file':
                 gitPath = file['path']
                 print('\tDownloading: ', gitPath, 'to', path)
@@ -166,7 +179,7 @@ class OTAUpdater:
     def _install_new_version(self):
         print('Installing new version at {} ...'.format(self.modulepath(self.main_dir)))
         if self._os_supports_rename():
-            os.rename(self.modulepath(self.new_version_dir), self.modulepath(self.main_dir))
+            os.rename(self.modulepath(self.new_version_dir) + '/' + self.main_dir, self.modulepath(self.main_dir))
         else:
             self._copy_directory(self.modulepath(self.new_version_dir), self.modulepath(self.main_dir))
             self._rmtree(self.modulepath(self.new_version_dir))

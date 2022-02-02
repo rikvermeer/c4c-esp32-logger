@@ -6,6 +6,7 @@ class Response:
         self._saveToFile = saveToFile
         self._encoding = 'utf-8'
         if saveToFile is not None:
+            print(saveToFile)
             CHUNK_SIZE = 512 # bytes
             with open(saveToFile, 'w') as outfile:
                 data = self._socket.read(CHUNK_SIZE)
@@ -39,7 +40,7 @@ class Response:
     def json(self):
         try:
             import ujson
-            result = ujson.load(self._socket)
+            result = ujson.loads(self.text)
             return result
         finally:
             self.close()
@@ -133,6 +134,7 @@ class HttpClient:
             s.close()
             raise
 
+        print('socket',s)
         resp = Response(s, saveToFile)
         resp.status_code = status
         resp.reason = reason
