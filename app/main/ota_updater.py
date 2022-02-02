@@ -107,11 +107,13 @@ class OTAUpdater:
 
     def _create_new_version_file(self, latest_version):
         self.mkdir(self.modulepath(self.new_version_dir))
+        print('Creating new version file in: ' + self.modulepath(self.new_version_dir) + '/.version')
         with open(self.modulepath(self.new_version_dir + '/.version'), 'w') as versionfile:
             versionfile.write(latest_version)
             versionfile.close()
 
     def get_version(self, directory, version_file_name='.version'):
+        print('Looking for current version in: ' + directory + '/.version')
         if version_file_name in os.listdir(directory):
             with open(directory + '/' + version_file_name) as f:
                 version = f.read()
@@ -142,7 +144,7 @@ class OTAUpdater:
         print(url)
         file_list = self.http_client.get(url)
         for file in file_list.json():
-            print(file)
+            #print(file)
             path = self.modulepath('/' + self.new_version_dir + '/' + file['path'].replace('app/', ''))
             subdir = '/'.join(path.split('/')[:-1])
             if not self._exists_dir(subdir):
