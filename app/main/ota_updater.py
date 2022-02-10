@@ -179,12 +179,21 @@ class OTAUpdater:
         print('Deleted old version at {} ...'.format(self.modulepath(self.main_dir)))
 
     def _install_new_version(self):
+        with open('/next/.version') as f:
+            version_content = f.read()
+        print('Reading version info from /next/.version', version_content)
+
         print('Installing new version at {} ...'.format(self.modulepath(self.main_dir)))
         if self._os_supports_rename():
             os.rename(self.modulepath(self.new_version_dir) + '/' + self.main_dir, self.modulepath(self.main_dir))
         else:
             self._copy_directory(self.modulepath(self.new_version_dir), self.modulepath(self.main_dir))
             self._rmtree(self.modulepath(self.new_version_dir))
+
+        with open('/main/.version') as f:
+            f.write(version_content)
+        print('Writing version info to /main/.version', version_content)
+        
         print('Update installed, please reboot now')
 
     def _rmtree(self, directory):
